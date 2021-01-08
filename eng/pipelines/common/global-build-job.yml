@@ -31,7 +31,6 @@ jobs:
     name: ${{ format('build_{0}{1}_{2}_{3}_{4}', parameters.osGroup, parameters.osSubgroup, parameters.archType, parameters.buildConfig, parameters.nameSuffix) }}
     displayName: ${{ format('Build {0}{1} {2} {3} {4}', parameters.osGroup, parameters.osSubgroup, parameters.archType, parameters.buildConfig, parameters.nameSuffix) }}
     pool: ${{ parameters.pool }}
-    container: ${{ parameters.container }}
     condition: and(succeeded(), ${{ parameters.condition }})
     timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
     enablePublishTestResults: ${{ parameters.enablePublishTestResults }}
@@ -75,56 +74,38 @@ jobs:
         - ${{ variable }}
 
     steps:
-    - template: /eng/pipelines/common/checkout-step.yml
-      parameters:
-        useBundle: ${{ parameters.useCheckoutBundle }}
+      - checkout: self
 
-    - ${{ if eq(parameters.isOfficialBuild, true) }}:
-      - template: /eng/pipelines/common/restore-internal-tools.yml
+      # - task: Docker@2
+      #   displayName: Initialize First Container
+      #   inputs:
+      #     command: start
+      #     container: centos7-x64
 
-    - ${{ if in(parameters.osGroup, 'OSX', 'iOS', 'tvOS', 'Android') }}:
-      - script: $(Build.SourcesDirectory)/eng/install-native-dependencies.sh ${{ parameters.osGroup }} ${{ parameters.archType }} azDO
-        displayName: Install Build Dependencies
+      # - task: Docker@2
+      #   displayName: Initialize Second Container
+      #   inputs:
+      #     command: start
+      #     container: musl-x64
 
-      - script: |
-          du -sh $(Build.SourcesDirectory)/*
-          df -h
-        displayName: Disk Usage before Build
+      - script: cat /etc/os-release
+        displayName: Print First Container Info
+        target:
+          container: centos7-x64
 
-    # Build
-    - script: $(Build.SourcesDirectory)$(dir)build$(scriptExt) -ci -arch ${{ parameters.archType }} $(_osParameter) ${{ parameters.buildArgs }} $(_officialBuildParameter) $(_crossBuildPropertyArg) $(_cxx11Parameter)
-      displayName: Build product
-      ${{ if eq(parameters.useContinueOnErrorDuringBuild, true) }}:
-        continueOnError: ${{ parameters.shouldContinueOnError }}
+      - script: cat /etc/os-release
+        displayName: Print Second Container Info
+        target:
+          container: musl-x64
 
-    - ${{ if in(parameters.osGroup, 'OSX', 'iOS', 'tvOS', 'Android') }}:
-      - script: |
-          du -sh $(Build.SourcesDirectory)/*
-          df -h
-        displayName: Disk Usage after Build
-        condition: always()
+      # - task: Docker@2
+      #   displayName: Stop First Container
+      #   inputs:
+      #     command: stop
+      #     container: centos7-x64
 
-      # If intended to send extra steps after regular build add them here.
-    - ${{ if ne(parameters.extraStepsTemplate, '') }}:
-      - template: ${{ parameters.extraStepsTemplate }}
-        parameters:
-          osGroup: ${{ parameters.osGroup }}
-          osSubgroup: ${{ parameters.osSubgroup }}
-          archType: ${{ parameters.archType }}
-          buildConfig: ${{ parameters.buildConfig }}
-          runtimeFlavor: ${{ parameters.runtimeFlavor }}
-          helixQueues: ${{ parameters.helixQueues }}
-          targetRid: ${{ parameters.targetRid }}
-          nameSuffix: ${{ parameters.nameSuffix }}
-          platform: ${{ parameters.platform }}
-          shouldContinueOnError: ${{ parameters.shouldContinueOnError }}
-          ${{ insert }}: ${{ parameters.extraStepsParameters }}
-
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Logs
-      inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/'
-        PublishLocation: Container
-        ArtifactName: Logs_Build_${{ parameters.osGroup }}_${{ parameters.osSubGroup }}_${{ parameters.archType }}_${{ parameters.buildConfig }}_${{ parameters.nameSuffix }}
-      continueOnError: true
-      condition: always()
+      # - task: Docker@2
+      #   displayName: Stop Second Container
+      #   inputs:
+      #     command: stop
+      #     container: musl-x64
