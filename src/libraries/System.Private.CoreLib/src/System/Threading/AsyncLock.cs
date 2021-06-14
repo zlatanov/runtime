@@ -13,18 +13,44 @@ namespace System.Threading
     public sealed class AsyncLock
     {
         // The lock object and a bool value representing whether the lock is free or not.
-        private readonly StrongBox<bool> _lockObjAndFree = new();
+        private readonly StrongBox<bool> _lockObjAndFree;
 
         // Head of list representing asynchronous waits.
         private TaskNode? m_asyncHead;
 
         /// <summary>
+        /// Creates a new instance of <see cref="AsyncLock"/>.
+        /// </summary>
+        public AsyncLock()
+        {
+            _lockObjAndFree = new StrongBox<bool>(true);
+        }
+
+        /// <summary>
         /// Creates a new instance of <see cref="AsyncLock"/> and optionally acquires the lock.
         /// </summary>
         /// <param name="acquire">when true the lock is acquired until <see cref="Release"/> is explicitly called</param>
-        public AsyncLock(bool acquire = false)
+        public AsyncLock(bool acquire)
         {
-            _lockObjAndFree.Value = !acquire;
+            _lockObjAndFree = new StrongBox<bool>(!acquire);
+        }
+
+        /// <summary>
+        /// Attempts to enter the <see cref="AsyncLock" /> synchronously, without blocking if the lock is already taken.
+        /// </summary>
+        /// <returns>true if the lock has been taken, false otherwise</returns>
+        public bool TryWait()
+        {
+            lock (_lockObjAndFree)
+            {
+                if (_lockObjAndFree.Value)
+                {
+                    _lockObjAndFree.Value = false;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -42,6 +68,23 @@ namespace System.Threading
 
             return new ValueTask(result.AsTask());
         }
+
+        /// <summary>
+        /// Asynchronously waits to enter the <see cref="AsyncLock"/>, using a <see cref="TimeSpan"/> to measure the time interval.
+        /// </summary>
+        /// <param name="timeout">
+        /// A <see cref="TimeSpan"/> that represents the number of milliseconds
+        /// to wait, or a <see cref="TimeSpan"/> that represents -1 milliseconds to wait indefinitely.
+        /// </param>
+        /// <returns>
+        /// A task that will complete with a result of true if the current thread successfully entered
+        /// the <see cref="AsyncLock"/>, otherwise with a result of false.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="timeout"/> is a negative number other than -1 milliseconds, which represents
+        /// an infinite time-out -or- timeout is greater than <see cref="int.MaxValue"/>.
+        /// </exception>
+        public ValueTask<bool> WaitAsync(TimeSpan timeout) => WaitAsync(timeout, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously waits to enter the <see cref="AsyncLock"/>, using a <see cref="TimeSpan"/> to measure the time interval.

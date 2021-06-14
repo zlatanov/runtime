@@ -422,10 +422,12 @@ namespace System.Threading
         public System.Threading.Tasks.Task<bool> WaitAsync(System.TimeSpan timeout) { throw null; }
         public System.Threading.Tasks.Task<bool> WaitAsync(System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken) { throw null; }
     }
-    public partial class AsyncLock
+    public sealed partial class AsyncLock
     {
+        public AsyncLock() { }
         public AsyncLock(bool acquire) { }
         public void Release() { throw null; }
+        public bool TryWait() { throw null; }
         public System.Threading.Tasks.ValueTask WaitAsync(System.Threading.CancellationToken cancellationToken) { throw null; }
         public System.Threading.Tasks.ValueTask<bool> WaitAsync(System.TimeSpan timeout) { throw null; }
         public System.Threading.Tasks.ValueTask<bool> WaitAsync(System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken) { throw null; }

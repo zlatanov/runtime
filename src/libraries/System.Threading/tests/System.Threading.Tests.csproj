@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AsyncLocalTests.cs" />
+    <Compile Include="AsyncLockTests.cs" />
     <Compile Include="AutoResetEventTests.cs" />
     <Compile Include="BarrierCancellationTests.cs" />
     <Compile Include="BarrierTests.cs" />
