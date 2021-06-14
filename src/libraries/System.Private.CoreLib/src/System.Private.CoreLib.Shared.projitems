@@ -997,6 +997,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)System\Threading\AbandonedMutexException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Threading\ApartmentState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Threading\AsyncLocal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System\Threading\AsyncLock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Threading\AutoResetEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Threading\CancellationToken.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Threading\CancellationTokenRegistration.cs" />
