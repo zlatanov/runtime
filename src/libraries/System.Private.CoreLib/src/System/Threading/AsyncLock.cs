@@ -287,7 +287,7 @@ namespace System.Threading
         // TaskNode in a linked list of asynchronous waiters
         private sealed class TaskNode : Task<bool>
         {
-            internal TaskNode() : base(null!, TaskCreationOptions.RunContinuationsAsynchronously) { }
+            internal TaskNode() : base((object?)null, TaskCreationOptions.RunContinuationsAsynchronously) { }
 
             /// <summary>
             /// The next node in the linked list.
